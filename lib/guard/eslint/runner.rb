@@ -1,6 +1,7 @@
 # coding: utf-8
 
 require 'json'
+require 'colorize'
 
 module Guard
   class Eslint
@@ -27,15 +28,34 @@ module Guard
       end
 
       def base_command
-        command = @options[:command].split(' ')
+        @options[:command].split(' ')
       end
 
       def show_output(paths)
-        command = base_command
-
-        command.concat(args_specified_by_user)
-        command.concat(paths)
-        system(*command)
+        # process the result to get the output
+        result.each do |res|
+          longest = [0, 0, 0]
+          puts "#{res[:filePath]}".colorize(:default).underline
+          errors = res[:messages].map do |err|
+            location = "#{err[:line]}:#{err[:column]}".colorize(:light_black)
+            if (location.length > longest[0])
+              longest[0] = location.length
+            end
+            status = (err[:severity] == 2 ? "error" : "warning").colorize(err[:severity] == 2 ? :red : :yellow)
+            if (status.length > longest[1])
+              longest[1] = status.length
+            end
+            message = err[:message]
+            if (message.length > longest[2])
+              longest[2] = message.length
+            end
+            rule = "#{err[:ruleId]}".colorize(:light_black)
+            [location, status, message, rule]
+          end
+          errors.each do |m|
+            puts "#{m[0].rjust(longest[0])}  #{m[1].ljust(longest[1])}  #{m[2].ljust(longest[2])}  #{m[3]}"
+          end
+        end
       end
 
       def build_command(paths)
