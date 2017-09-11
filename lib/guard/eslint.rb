@@ -21,7 +21,9 @@ module Guard
         keep_failed:  false,
         notification: :failed,
         cli: nil,
-        hide_stdout: false
+        hide_stdout: false,
+        command: 'eslint',
+        paths: ['**/*.js', '**/*.es6']
       }.merge(options)
 
       @failed_paths = []
@@ -76,17 +78,19 @@ module Guard
     # @return [Object] the task result
     #
     def run_on_modifications(paths)
+      puts "modifications: #{paths}"
       run_partially(paths)
     end
 
     private
 
-    def inspect_with_eslint(paths = [])
+    def inspect_with_eslint(paths = @options[:paths] || [])
       runner = Runner.new(@options)
       passed = runner.run(paths)
       @failed_paths = runner.failed_paths
       throw :task_has_failed unless passed
     rescue => error
+      puts error.backtrace
       Compat::UI.error 'The following exception occurred while running guard-eslint: ' \
                        "#{error.backtrace.first} #{error.message} (#{error.class.name})"
     end

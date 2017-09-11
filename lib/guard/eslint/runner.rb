@@ -26,10 +26,12 @@ module Guard
         passed
       end
 
-      def show_output(paths)
-        command = ['eslint']
+      def base_command
+        command = @options[:command].split(' ')
+      end
 
-        command.concat(['**/*.js', '**/*.es6']) if paths.empty?
+      def show_output(paths)
+        command = base_command
 
         command.concat(args_specified_by_user)
         command.concat(paths)
@@ -37,9 +39,7 @@ module Guard
       end
 
       def build_command(paths)
-        command = ['eslint']
-
-        command.concat(['**/*.js', '**/*.es6']) if paths.empty?
+        command = base_command
 
         command.concat(['-f', 'json', '-o', json_file_path])
         command.concat(args_specified_by_user)
